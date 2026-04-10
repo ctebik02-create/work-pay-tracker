@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Tracker</title>
+</head>
+<body>
+    <h1>Work Tracker</h1>
+
+    <p id="current-period"></p>
+
+    <p id="earned">Total earned: loading...</p>
+    <p id="hours">Total hours: loading...</p>
+    <p id="shifts">Total shifts: loading...</p>
+
+    <hr>
+
+    <h2>Add shift</h2>
+
+    <label for="date">Date:</label>
+    <input type="date" id="date">
+
+    <hr>
+
+    <h2>Settings</h2>
+
+    <label for="hour-rate">Hour rate:</label>
+    <input type="number" id="hour-rate" step="0.5" min="0">
+
+    <br><br>
+
+    <label for="period-start-day">Period start day:</label>
+    <input type="number" id="period-start-day" min="1" max="28">
+
+    <br><br>
+
+    <button id="save-settings-btn">Save settings</button>
+
+    <p id="settings-status"></p>
+
+    <hr>
+
+    <h2>Shifts</h2>
+    <div id="shifts-list">Loading shifts...</div>
+
+    <br><br>
+
+    <label for="hours">Hours:</label>
+    <input type="number" id="hours-input" step="0.5" min="0">
+
+    <br><br>
+
+    <button id="add-shift-btn">Add shift</button>
+
+    <p id="status"></p>
+
+    <script>
+    let editingShiftId = null;
+
+
+    function formatDateForInput(backendDate) {
+        return backendDate;
+    }
+
+    function resetShiftForm() {
+        editingShiftId = null;
+        document.getElementById("date").value = "";
+        document.getElementById("hours-input").value = "";
+        document.getElementById("add-shift-btn").textContent = "Add shift";
+        document.getElementById("status").textContent = "";
+    }
+
+    function loadSummary() {
+        fetch("/summary")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("earned").textContent = `Total earned: ${data.total_earned}`;
+                document.getElementById("hours").textContent = `Total hours: ${data.total_hours}`;
+                document.getElementById("shifts").textContent = `Total shifts: ${data.total_shifts}`;
+                document.getElementById("current-period").textContent =
+                    `Current period: ${formatDate(data.period_start)} — ${formatDate(data.period_end)}`;
+            })
+            .catch(error => {
+                console.error("Summary error:", error);
+                document.getElementById("status").textContent = "Failed to load summary";
+            });
+    }
+
+    function loadShifts() {
+        fetch("/shifts")
+            .then(response => response.json())
+            .then(data => {
+                const shiftsList = document.getElementById("shifts-list");
+
+                if (data.length === 0) {
+                    shiftsList.innerHTML = "<p>No shifts yet</p>";
+                    return;
+                }
+
+                shiftsList.innerHTML = "";
+
+                data.forEach(shift => {
+                    const shiftItem = document.createElement("div");
+
+                    const shiftText = document.createElement("span");
+                    shiftText.textContent = `${shift.date} — ${shift.hours}h — €${shift.earned} `;
+
+                    const editButton = document.createElement("button");
+                    editButton.textContent = "Edit";
+                    editButton.addEventListener("click", () => {
+                        editingShiftId = shift.id;
+                        document.getElementById("date").value = formatDateForInput(shift.date);
+                        document.getElementById("hours-input").value = shift.hours;
+                        document.getElementById("add-shift-btn").textContent = "Update shift";
+                        document.getElementById("status").textContent = `Editing shift #${shift.id}`;
+                    });
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Delete";
+                    deleteButton.addEventListener("click", () => {
+                        const confirmed = confirm("Are you sure you want to delete this shift?");
+                        if (!confirmed) {
+                            return;
+                        }
+                        fetch(`/shifts/${shift.id}`, {
+                            method: "DELETE"
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error("Failed to delete shift");
+                                }
+                                return response.json();
+                            })
+                            .then(() => {
+                                if (editingShiftId === shift.id) {
+                                    resetShiftForm();
+                                }
+                                loadSummary();
+                                loadShifts();
+                            })
+                            .catch(error => {
+                                console.error("Delete error:", error);
+                                document.getElementById("status").textContent = "Failed to delete shift";
+                            });
+                    });
+
+                    shiftItem.appendChild(shiftText);
+                    shiftItem.appendChild(editButton);
+                    shiftItem.appendChild(deleteButton);
+
+                    shiftsList.appendChild(shiftItem);
+                });
+            })
+            .catch(error => {
+                console.error("Shifts error:", error);
+                document.getElementById("shifts-list").textContent = "Failed to load shifts";
+            });
+    }
+
+    document.getElementById("add-shift-btn").addEventListener("click", () => {
+        const rawDate = document.getElementById("date").value;
+        const hours = document.getElementById("hours-input").value;
+        const status = document.getElementById("status");
+
+        if (!rawDate || !hours) {
+            status.textContent = "Please fill in date and hours";
+            return;
+        }
+
+        const payload = {
+            date: rawDate,
+            hours: Number(hours)
+        };
+
+        const isEditing = editingShiftId !== null;
+        const url = isEditing ? `/shifts/${editingShiftId}` : "/shifts";
+        const method = isEditing ? "PUT" : "POST";
+
+        fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(isEditing ? "Failed to update shift" : "Failed to add shift");
+                }
+                return response.json();
+            })
+            .then(data => {
+                status.textContent = isEditing
+                    ? `Shift updated: ${data.date}, ${data.hours}h`
+                    : `Shift added: ${data.date}, ${data.hours}h`;
+
+                resetShiftForm();
+                loadSummary();
+                loadShifts();
+            })
+            .catch(error => {
+                console.error("Shift save error:", error);
+                status.textContent = isEditing ? "Failed to update shift" : "Failed to add shift";
+            });
+    });
+
+    function loadSettings() {
+        fetch("/settings")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("hour-rate").value = data.hour_rate;
+                document.getElementById("period-start-day").value = data.salary_period_start_day;
+            })
+            .catch(error => {
+                console.error("Settings load error:", error);
+                document.getElementById("settings-status").textContent = "Failed to load settings";
+            });
+    }
+
+    document.getElementById("save-settings-btn").addEventListener("click", () => {
+        const hourRate = document.getElementById("hour-rate").value;
+        const periodStartDay = document.getElementById("period-start-day").value;
+        const settingsStatus = document.getElementById("settings-status");
+
+        if (!hourRate || !periodStartDay) {
+            settingsStatus.textContent = "Please fill in all settings";
+            return;
+        }
+
+        fetch("/settings", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                hour_rate: Number(hourRate),
+                default_shift_normal_hours: 8,
+                salary_period_start_day: Number(periodStartDay)
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to save settings");
+                }
+                return response.json();
+            })
+            .then(() => {
+                settingsStatus.textContent = "Settings saved";
+                loadSummary();
+            })
+            .catch(error => {
+                console.error("Settings save error:", error);
+                settingsStatus.textContent = "Failed to save settings";
+            });
+    });
+
+    function formatDate(dateStr) {
+        const [year, month, day] = dateStr.split("-");
+        return `${day}.${month}.${year}`;
+    }
+
+    loadSettings();
+    loadSummary();
+    loadShifts();
+</script>
