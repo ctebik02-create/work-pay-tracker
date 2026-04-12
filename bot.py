@@ -14,7 +14,7 @@ dp = Dispatcher()
 async def start(message: Message):
     button = InlineKeyboardButton(
         text = 'Open Work Tracker',
-        web_app = WebAppInfo(url='https://nontrivial-flavoursome-geraldo.ngrok-free.dev/')
+        web_app = WebAppInfo(url='https://work-pay-tracker.onrender.com')
     )
     keyboard = InlineKeyboardMarkup(
         inline_keyboard = [[button]]
