@@ -14,6 +14,10 @@
     <p id="hours">Total hours: loading...</p>
     <p id="shifts">Total shifts: loading...</p>
 
+    <button id="ai-summary-btn">Generate AI summary</button>
+    <p id="ai-summary-status"></p>
+    <div id="ai-summary-text"></div>
+
     <hr>
 
     <h2>Add shift</h2>
@@ -58,7 +62,6 @@
     <script>
     let editingShiftId = null;
 
-
     function formatDateForInput(backendDate) {
         return backendDate;
     }
@@ -69,6 +72,11 @@
         document.getElementById("hours-input").value = "";
         document.getElementById("add-shift-btn").textContent = "Add shift";
         document.getElementById("status").textContent = "";
+    }
+
+    function resetAISummary() {
+        document.getElementById("ai-summary-status").textContent = "";
+        document.getElementById("ai-summary-text").innerHTML = "";
     }
 
     function loadSummary() {
@@ -84,6 +92,36 @@
             .catch(error => {
                 console.error("Summary error:", error);
                 document.getElementById("status").textContent = "Failed to load summary";
+            });
+    }
+
+    function loadAISummary() {
+        const aiSummaryStatus = document.getElementById("ai-summary-status");
+        const aiSummaryText = document.getElementById("ai-summary-text");
+
+        aiSummaryStatus.textContent = "Generating AI summary...";
+        aiSummaryText.innerHTML = "";
+
+        fetch("/summary/ai")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to generate AI summary");
+                }
+                return response.json();
+            })
+            .then(data => {
+                aiSummaryStatus.textContent = "";
+                aiSummaryText.innerHTML = `
+                    <div style="border:1px solid #ccc; padding:10px; margin-top:10px;">
+                        <strong>AI Summary:</strong>
+                        <p>${data.summary_text}</p>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error("AI summary error:", error);
+                aiSummaryStatus.textContent = "Failed to generate AI summary";
+                aiSummaryText.innerHTML = "";
             });
     }
 
@@ -123,6 +161,7 @@
                         if (!confirmed) {
                             return;
                         }
+
                         fetch(`/shifts/${shift.id}`, {
                             method: "DELETE"
                         })
@@ -136,6 +175,7 @@
                                 if (editingShiftId === shift.id) {
                                     resetShiftForm();
                                 }
+                                resetAISummary();
                                 loadSummary();
                                 loadShifts();
                             })
@@ -196,6 +236,7 @@
                     : `Shift added: ${data.date}, ${data.hours}h`;
 
                 resetShiftForm();
+                resetAISummary();
                 loadSummary();
                 loadShifts();
             })
@@ -247,12 +288,17 @@
             })
             .then(() => {
                 settingsStatus.textContent = "Settings saved";
+                resetAISummary();
                 loadSummary();
             })
             .catch(error => {
                 console.error("Settings save error:", error);
                 settingsStatus.textContent = "Failed to save settings";
             });
+    });
+
+    document.getElementById("ai-summary-btn").addEventListener("click", () => {
+        loadAISummary();
     });
 
     function formatDate(dateStr) {
@@ -263,4 +309,6 @@
     loadSettings();
     loadSummary();
     loadShifts();
-</script>
+    </script>
+</body>
+</html>
