@@ -29,6 +29,9 @@ def init_db():
                 )
             """)
 
+            cursor.execute('''
+            ALTER TABLE shifts ADD COLUMN IF NOT EXISTS note TEXT''')
+
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
                     id INTEGER PRIMARY KEY,
@@ -66,14 +69,14 @@ def get_all_shifts():
             return rows
 
 
-def add_shift_to_db(date, hours, earned):
+def add_shift_to_db(date, hours, earned, note):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO shifts (date, hours, earned)
-                VALUES (%s, %s, %s)
+                INSERT INTO shifts (date, hours, earned, note)
+                VALUES (%s, %s, %s, %s)
                 RETURNING *
-            """, (date, hours, earned))
+            """, (date, hours, earned, note))
             row = cursor.fetchone()
             return row
 
@@ -88,15 +91,15 @@ def delete_shift_from_db(shift_id):
             return cursor.rowcount > 0
 
 
-def update_shift_in_db(shift_id, date, hours, earned):
+def update_shift_in_db(shift_id, date, hours, earned, note):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
                 UPDATE shifts
-                SET date = %s, hours = %s, earned = %s
+                SET date = %s, hours = %s, earned = %s, note = %s
                 WHERE id = %s
                 RETURNING *
-            """, (date, hours, earned, shift_id))
+            """, (date, hours, earned, note, shift_id))
             row = cursor.fetchone()
             return row
 

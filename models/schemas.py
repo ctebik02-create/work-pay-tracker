@@ -9,5 +9,6 @@ class SettingsUpdate(BaseModel):
 class ShiftCreate(BaseModel):
     date: date
     hours: float = Field(gt=0, le=24)
+    note: str | None = None
 
 

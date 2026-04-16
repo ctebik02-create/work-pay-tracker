@@ -20,7 +20,7 @@ def post_shifts(shifts: ShiftCreate):
     settings = get_settings_from_db()
     hour_rate = settings["hour_rate"]
     earned = hour_rate * shifts.hours
-    new_shifts = add_shift_to_db(shifts.date, shifts.hours, earned)
+    new_shifts = add_shift_to_db(shifts.date, shifts.hours, earned, shifts.note)
     return new_shifts
 
 def calculate_summary():
@@ -90,7 +90,8 @@ def update_shift(shift_id : int, shift : ShiftCreate):
         shift_id,
         shift.date,
         shift.hours,
-        earned
+        earned,
+        shift.note,
     )
     if not result:
         raise HTTPException(status_code=404, detail="Shift not found")
