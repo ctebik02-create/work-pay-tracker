@@ -103,6 +103,9 @@
 
         .actions-row {
             margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         button {
@@ -150,6 +153,14 @@
         .ai-summary-card {
             border: 1px solid #dbeafe;
             background: #eff6ff;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        .ai-reflection-card {
+            border: 1px solid #ddd6fe;
+            background: #f5f3ff;
             border-radius: 12px;
             padding: 14px;
             margin-top: 12px;
@@ -206,6 +217,14 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .actions-row {
+                flex-direction: column;
+            }
+
+            .actions-row button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -235,10 +254,14 @@
 
             <div class="actions-row">
                 <button id="ai-summary-btn">Generate AI summary</button>
+                <button id="ai-reflection-btn">Generate AI reflection</button>
             </div>
 
             <p id="ai-summary-status" class="status"></p>
             <div id="ai-summary-text"></div>
+
+            <p id="ai-reflection-status" class="status"></p>
+            <div id="ai-reflection-text"></div>
         </div>
 
         <div class="card">
@@ -322,6 +345,11 @@
             document.getElementById("ai-summary-text").innerHTML = "";
         }
 
+        function resetAIReflection() {
+            document.getElementById("ai-reflection-status").textContent = "";
+            document.getElementById("ai-reflection-text").innerHTML = "";
+        }
+
         function loadSummary() {
             fetch("/summary")
                 .then(response => response.json())
@@ -365,6 +393,36 @@
                     console.error("AI summary error:", error);
                     aiSummaryStatus.textContent = "Failed to generate AI summary";
                     aiSummaryText.innerHTML = "";
+                });
+        }
+
+        function loadAIReflection() {
+            const aiReflectionStatus = document.getElementById("ai-reflection-status");
+            const aiReflectionText = document.getElementById("ai-reflection-text");
+
+            aiReflectionStatus.textContent = "Generating AI reflection...";
+            aiReflectionText.innerHTML = "";
+
+            fetch("/reflection/current-period")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to generate AI reflection");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    aiReflectionStatus.textContent = "";
+                    aiReflectionText.innerHTML = `
+                        <div class="ai-reflection-card">
+                            <strong>AI Reflection</strong>
+                            <p style="margin-top: 8px; line-height: 1.6; white-space: pre-line;">${data.reflection_text}</p>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error("AI reflection error:", error);
+                    aiReflectionStatus.textContent = "Failed to generate AI reflection";
+                    aiReflectionText.innerHTML = "";
                 });
         }
 
@@ -439,6 +497,7 @@
                                         resetShiftForm();
                                     }
                                     resetAISummary();
+                                    resetAIReflection();
                                     loadSummary();
                                     loadShifts();
                                 })
@@ -498,6 +557,7 @@
 
                     resetShiftForm();
                     resetAISummary();
+                    resetAIReflection();
                     loadSummary();
                     loadShifts();
                 })
@@ -550,6 +610,7 @@
                 .then(() => {
                     settingsStatus.textContent = "Settings saved";
                     resetAISummary();
+                    resetAIReflection();
                     loadSummary();
                 })
                 .catch(error => {
@@ -560,6 +621,10 @@
 
         document.getElementById("ai-summary-btn").addEventListener("click", () => {
             loadAISummary();
+        });
+
+        document.getElementById("ai-reflection-btn").addEventListener("click", () => {
+            loadAIReflection();
         });
 
         loadSettings();

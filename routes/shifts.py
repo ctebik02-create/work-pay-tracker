@@ -4,7 +4,8 @@ from services.periods import get_current_period_start, get_current_period_end
 from datetime import date
 from storage.database import add_shift_to_db, get_all_shifts, delete_shift_from_db, update_shift_in_db
 from storage.database import get_settings_from_db
-from services.aisummary import generate_ai_summary
+from services.aisummary import generate_ai_summary, build_reflection_data, generate_ai_reflection
+
 
 router = APIRouter()
 
@@ -96,3 +97,11 @@ def update_shift(shift_id : int, shift : ShiftCreate):
     if not result:
         raise HTTPException(status_code=404, detail="Shift not found")
     return result
+
+@router.get('/reflection/current-period')
+def get_current_period_reflection():
+    data = build_reflection_data()
+    text = generate_ai_reflection(data)
+    return {
+        "reflection_text": text,
+    }
