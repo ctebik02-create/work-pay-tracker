@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Work Tracker</title>
+
     <style>
         * {
             box-sizing: border-box;
@@ -204,6 +205,23 @@
             gap: 8px;
         }
 
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .auth-switch {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
         @media (max-width: 700px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -225,102 +243,261 @@
             .actions-row button {
                 width: 100%;
             }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>Work Tracker</h1>
 
-        <div class="card">
-            <p id="current-period" class="muted">Current period: loading...</p>
-
-            <div class="summary-grid">
-                <div class="summary-box">
-                    <div class="summary-label">Total earned</div>
-                    <div class="summary-value" id="earned">loading...</div>
-                </div>
-
-                <div class="summary-box">
-                    <div class="summary-label">Total hours</div>
-                    <div class="summary-value" id="hours">loading...</div>
-                </div>
-
-                <div class="summary-box">
-                    <div class="summary-label">Total shifts</div>
-                    <div class="summary-value" id="shifts">loading...</div>
-                </div>
-            </div>
-
-            <div class="actions-row">
-                <button id="ai-summary-btn">Generate AI summary</button>
-                <button id="ai-reflection-btn">Generate AI reflection</button>
-            </div>
-
-            <p id="ai-summary-status" class="status"></p>
-            <div id="ai-summary-text"></div>
-
-            <p id="ai-reflection-status" class="status"></p>
-            <div id="ai-reflection-text"></div>
-        </div>
-
-        <div class="card">
-            <h2>Add shift</h2>
+        <div id="auth-section" class="card">
+            <h1 id="auth-title">Login</h1>
 
             <div class="form-grid">
-                <div>
-                    <label for="date">Date</label>
-                    <input type="date" id="date">
-                </div>
-
-                <div>
-                    <label for="hours-input">Hours</label>
-                    <input type="number" id="hours-input" step="0.5" min="0">
+                <div class="full-width">
+                    <label for="auth-username">Username</label>
+                    <input type="text" id="auth-username" autocomplete="username">
                 </div>
 
                 <div class="full-width">
-                    <label for="note">Note</label>
-                    <textarea id="note" placeholder="How did the day go? Any problems, mood, workload, notes..."></textarea>
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" autocomplete="current-password">
                 </div>
             </div>
 
             <div class="actions-row">
-                <button id="add-shift-btn">Add shift</button>
+                <button id="auth-submit-btn">Login</button>
             </div>
 
-            <p id="status" class="status"></p>
+            <p id="auth-status" class="status"></p>
+
+            <p class="auth-switch">
+                <span id="auth-switch-text">No account yet?</span>
+                <button id="auth-switch-btn" class="small-btn secondary-btn">Register</button>
+            </p>
         </div>
 
-        <div class="card">
-            <h2>Settings</h2>
-
-            <div class="form-grid">
-                <div>
-                    <label for="hour-rate">Hour rate</label>
-                    <input type="number" id="hour-rate" step="0.5" min="0">
-                </div>
-
-                <div>
-                    <label for="period-start-day">Period start day</label>
-                    <input type="number" id="period-start-day" min="1" max="28">
-                </div>
+        <div id="app-section" class="hidden">
+            <div class="top-bar">
+                <h1>Work Tracker</h1>
+                <button id="logout-btn" class="secondary-btn">Logout</button>
             </div>
 
-            <div class="actions-row">
-                <button id="save-settings-btn">Save settings</button>
+            <div class="card">
+                <p id="current-period" class="muted">Current period: loading...</p>
+
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <div class="summary-label">Total earned</div>
+                        <div class="summary-value" id="earned">loading...</div>
+                    </div>
+
+                    <div class="summary-box">
+                        <div class="summary-label">Total hours</div>
+                        <div class="summary-value" id="hours">loading...</div>
+                    </div>
+
+                    <div class="summary-box">
+                        <div class="summary-label">Total shifts</div>
+                        <div class="summary-value" id="shifts">loading...</div>
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    <button id="ai-summary-btn">Generate AI summary</button>
+                    <button id="ai-reflection-btn">Generate AI reflection</button>
+                </div>
+
+                <p id="ai-summary-status" class="status"></p>
+                <div id="ai-summary-text"></div>
+
+                <p id="ai-reflection-status" class="status"></p>
+                <div id="ai-reflection-text"></div>
             </div>
 
-            <p id="settings-status" class="status"></p>
-        </div>
+            <div class="card">
+                <h2>Add shift</h2>
 
-        <div class="card">
-            <h2>Shifts</h2>
-            <div id="shifts-list">Loading shifts...</div>
+                <div class="form-grid">
+                    <div>
+                        <label for="date">Date</label>
+                        <input type="date" id="date">
+                    </div>
+
+                    <div>
+                        <label for="hours-input">Hours</label>
+                        <input type="number" id="hours-input" step="0.5" min="0">
+                    </div>
+
+                    <div class="full-width">
+                        <label for="note">Note</label>
+                        <textarea id="note" placeholder="How did the day go? Any problems, mood, workload, notes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    <button id="add-shift-btn">Add shift</button>
+                </div>
+
+                <p id="status" class="status"></p>
+            </div>
+
+            <div class="card">
+                <h2>Settings</h2>
+
+                <div class="form-grid">
+                    <div>
+                        <label for="hour-rate">Hour rate</label>
+                        <input type="number" id="hour-rate" step="0.5" min="0">
+                    </div>
+
+                    <div>
+                        <label for="period-start-day">Period start day</label>
+                        <input type="number" id="period-start-day" min="1" max="28">
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    <button id="save-settings-btn">Save settings</button>
+                </div>
+
+                <p id="settings-status" class="status"></p>
+            </div>
+
+            <div class="card">
+                <h2>Shifts</h2>
+                <div id="shifts-list">Loading shifts...</div>
+            </div>
         </div>
     </div>
 
     <script>
         let editingShiftId = null;
+        let authMode = "login";
+
+        function getToken() {
+            return localStorage.getItem("token");
+        }
+
+        function setToken(token) {
+            localStorage.setItem("token", token);
+        }
+
+        function removeToken() {
+            localStorage.removeItem("token");
+        }
+
+        function showAuth() {
+            document.getElementById("auth-section").classList.remove("hidden");
+            document.getElementById("app-section").classList.add("hidden");
+        }
+
+        function showApp() {
+            document.getElementById("auth-section").classList.add("hidden");
+            document.getElementById("app-section").classList.remove("hidden");
+        }
+
+        function authFetch(url, options = {}) {
+            const token = getToken();
+
+            const headers = {
+                ...(options.headers || {}),
+                "Authorization": `Bearer ${token}`
+            };
+
+            return fetch(url, {
+                ...options,
+                headers
+            }).then(response => {
+                if (response.status === 401) {
+                    removeToken();
+                    showAuth();
+                    throw new Error("Unauthorized");
+                }
+
+                return response;
+            });
+        }
+
+        function updateAuthUI() {
+            const title = document.getElementById("auth-title");
+            const submitBtn = document.getElementById("auth-submit-btn");
+            const switchText = document.getElementById("auth-switch-text");
+            const switchBtn = document.getElementById("auth-switch-btn");
+
+            if (authMode === "login") {
+                title.textContent = "Login";
+                submitBtn.textContent = "Login";
+                switchText.textContent = "No account yet?";
+                switchBtn.textContent = "Register";
+            } else {
+                title.textContent = "Register";
+                submitBtn.textContent = "Register";
+                switchText.textContent = "Already have an account?";
+                switchBtn.textContent = "Login";
+            }
+
+            document.getElementById("auth-status").textContent = "";
+        }
+
+        function handleAuthSubmit() {
+            const username = document.getElementById("auth-username").value.trim();
+            const password = document.getElementById("auth-password").value;
+            const authStatus = document.getElementById("auth-status");
+
+            if (!username || !password) {
+                authStatus.textContent = "Please enter username and password";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("username", username);
+            formData.append("password", password);
+
+            const url = authMode === "login" ? "/auth/login" : "/auth/register";
+
+            authStatus.textContent = authMode === "login"
+                ? "Logging in..."
+                : "Creating account...";
+
+            fetch(url, {
+                method: "POST",
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(authMode === "login" ? "Login failed" : "Register failed");
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.access_token) {
+                        throw new Error("No access_token received");
+                    }
+
+                    setToken(data.access_token);
+
+                    document.getElementById("auth-username").value = "";
+                    document.getElementById("auth-password").value = "";
+                    authStatus.textContent = "";
+
+                    showApp();
+                    loadAppData();
+                })
+                .catch(error => {
+                    console.error("Auth error:", error);
+
+                    authStatus.textContent = authMode === "login"
+                        ? "Incorrect username or password"
+                        : "Failed to create account";
+                });
+        }
 
         function formatDateForInput(backendDate) {
             return backendDate;
@@ -351,8 +528,14 @@
         }
 
         function loadSummary() {
-            fetch("/summary")
-                .then(response => response.json())
+            authFetch("/summary")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to load summary");
+                    }
+
+                    return response.json();
+                })
                 .then(data => {
                     document.getElementById("earned").textContent = `€${data.total_earned}`;
                     document.getElementById("hours").textContent = data.total_hours;
@@ -373,11 +556,12 @@
             aiSummaryStatus.textContent = "Generating AI summary...";
             aiSummaryText.innerHTML = "";
 
-            fetch("/summary/ai")
+            authFetch("/summary/ai")
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Failed to generate AI summary");
                     }
+
                     return response.json();
                 })
                 .then(data => {
@@ -403,11 +587,12 @@
             aiReflectionStatus.textContent = "Generating AI reflection...";
             aiReflectionText.innerHTML = "";
 
-            fetch("/reflection/current-period")
+            authFetch("/reflection/current-period")
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Failed to generate AI reflection");
                     }
+
                     return response.json();
                 })
                 .then(data => {
@@ -427,8 +612,14 @@
         }
 
         function loadShifts() {
-            fetch("/shifts")
-                .then(response => response.json())
+            authFetch("/shifts")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to load shifts");
+                    }
+
+                    return response.json();
+                })
                 .then(data => {
                     const shiftsList = document.getElementById("shifts-list");
 
@@ -479,23 +670,26 @@
 
                         deleteButton.addEventListener("click", () => {
                             const confirmed = confirm("Are you sure you want to delete this shift?");
+
                             if (!confirmed) {
                                 return;
                             }
 
-                            fetch(`/shifts/${shift.id}`, {
+                            authFetch(`/shifts/${shift.id}`, {
                                 method: "DELETE"
                             })
                                 .then(response => {
                                     if (!response.ok) {
                                         throw new Error("Failed to delete shift");
                                     }
+
                                     return response.json();
                                 })
                                 .then(() => {
                                     if (editingShiftId === shift.id) {
                                         resetShiftForm();
                                     }
+
                                     resetAISummary();
                                     resetAIReflection();
                                     loadSummary();
@@ -516,7 +710,7 @@
                 });
         }
 
-        document.getElementById("add-shift-btn").addEventListener("click", () => {
+        function saveShift() {
             const rawDate = document.getElementById("date").value;
             const hours = document.getElementById("hours-input").value;
             const note = document.getElementById("note").value.trim();
@@ -537,7 +731,7 @@
             const url = isEditing ? `/shifts/${editingShiftId}` : "/shifts";
             const method = isEditing ? "PUT" : "POST";
 
-            fetch(url, {
+            authFetch(url, {
                 method: method,
                 headers: {
                     "Content-Type": "application/json"
@@ -548,6 +742,7 @@
                     if (!response.ok) {
                         throw new Error(isEditing ? "Failed to update shift" : "Failed to add shift");
                     }
+
                     return response.json();
                 })
                 .then(data => {
@@ -563,13 +758,21 @@
                 })
                 .catch(error => {
                     console.error("Shift save error:", error);
-                    status.textContent = isEditing ? "Failed to update shift" : "Failed to add shift";
+                    status.textContent = isEditing
+                        ? "Failed to update shift"
+                        : "Failed to add shift";
                 });
-        });
+        }
 
         function loadSettings() {
-            fetch("/settings")
-                .then(response => response.json())
+            authFetch("/settings")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to load settings");
+                    }
+
+                    return response.json();
+                })
                 .then(data => {
                     document.getElementById("hour-rate").value = data.hour_rate;
                     document.getElementById("period-start-day").value = data.salary_period_start_day;
@@ -580,7 +783,7 @@
                 });
         }
 
-        document.getElementById("save-settings-btn").addEventListener("click", () => {
+        function saveSettings() {
             const hourRate = document.getElementById("hour-rate").value;
             const periodStartDay = document.getElementById("period-start-day").value;
             const settingsStatus = document.getElementById("settings-status");
@@ -590,7 +793,7 @@
                 return;
             }
 
-            fetch("/settings", {
+            authFetch("/settings", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -605,6 +808,7 @@
                     if (!response.ok) {
                         throw new Error("Failed to save settings");
                     }
+
                     return response.json();
                 })
                 .then(() => {
@@ -617,19 +821,42 @@
                     console.error("Settings save error:", error);
                     settingsStatus.textContent = "Failed to save settings";
                 });
+        }
+
+        function loadAppData() {
+            loadSettings();
+            loadSummary();
+            loadShifts();
+        }
+
+        document.getElementById("auth-submit-btn").addEventListener("click", handleAuthSubmit);
+
+        document.getElementById("auth-switch-btn").addEventListener("click", () => {
+            authMode = authMode === "login" ? "register" : "login";
+            updateAuthUI();
         });
 
-        document.getElementById("ai-summary-btn").addEventListener("click", () => {
-            loadAISummary();
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            removeToken();
+            resetShiftForm();
+            resetAISummary();
+            resetAIReflection();
+            showAuth();
         });
 
-        document.getElementById("ai-reflection-btn").addEventListener("click", () => {
-            loadAIReflection();
-        });
+        document.getElementById("add-shift-btn").addEventListener("click", saveShift);
+        document.getElementById("save-settings-btn").addEventListener("click", saveSettings);
+        document.getElementById("ai-summary-btn").addEventListener("click", loadAISummary);
+        document.getElementById("ai-reflection-btn").addEventListener("click", loadAIReflection);
 
-        loadSettings();
-        loadSummary();
-        loadShifts();
+        updateAuthUI();
+
+        if (getToken()) {
+            showApp();
+            loadAppData();
+        } else {
+            showAuth();
+        }
     </script>
 </body>
 </html>

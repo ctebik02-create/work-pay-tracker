@@ -3,7 +3,7 @@ from routes.settings import router as settings_router
 from routes.shifts import router as shift_router
 from fastapi.responses import FileResponse
 from storage.database import init_db
-
+from routes.auth import router as auth_router
 
 
 app = FastAPI()
@@ -16,3 +16,4 @@ def serve_mini_app():
 
 app.include_router(settings_router)
 app.include_router(shift_router)
+app.include_router(auth_router)

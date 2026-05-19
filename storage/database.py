@@ -20,24 +20,33 @@ def get_connection():
 def init_db():
     with get_connection() as conn:
         with conn.cursor() as cursor:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL
+                )
+            ''')
+
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS shifts (
                     id SERIAL PRIMARY KEY,
                     date TEXT NOT NULL,
                     hours REAL NOT NULL,
-                    earned REAL NOT NULL
+                    earned REAL NOT NULL,
+                    note TEXT,
+                    user_id INTEGER REFERENCES users(id)
                 )
             """)
 
-            cursor.execute('''
-            ALTER TABLE shifts ADD COLUMN IF NOT EXISTS note TEXT''')
 
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
                     id INTEGER PRIMARY KEY,
                     hour_rate REAL NOT NULL,
                     default_shift_normal_hours INTEGER NOT NULL,
-                    salary_period_start_day INTEGER NOT NULL
+                    salary_period_start_day INTEGER NOT NULL,
+                    user_id INTEGER REFERENCES users(id)
                 )
             """)
 
@@ -133,3 +142,32 @@ def update_settings_in_db(hour_rate, default_shift_normal_hours, salary_period_s
             ))
             row = cursor.fetchone()
             return row
+
+def create_user(username, password):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+            INSERT INTO users (
+            username,
+            password)
+            VALUES (%s, %s)
+            RETURNING *
+            ''', (username, password))
+            row = cursor.fetchone()
+            return row
+
+def get_user_by_username(username):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+            SELECT * FROM users WHERE username = %s''', (username,))
+            row = cursor.fetchone()
+            return row
+
+def delete_user(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+            DELETE FROM users 
+            WHERE id = %s''', (user_id,))
+            return cursor.rowcount > 0

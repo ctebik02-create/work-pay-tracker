@@ -47,46 +47,6 @@ Make it sound human and concise.
     data = response.json()
     return data["choices"][0]["message"]["content"]
 
-def build_reflection_data():
-    shifts = get_all_shifts()
-    settings = get_settings_from_db()
-    period_start_day = settings["salary_period_start_day"]
-    period_start = get_current_period_start(period_start_day)
-    period_end = get_current_period_end(period_start, period_start_day)
-    filtered_shifts = []
-    for shift in shifts:
-        shift_date = date.fromisoformat(shift['date'])
-        if period_start <= shift_date <= period_end:
-            filtered_shifts.append(shift)
-    notes = []
-    for shift in filtered_shifts:
-        note = shift['note']
-        if note is not None and note.strip() != "":
-            notes.append({'date': shift['date'], 'note': note})
-
-    total_earned = sum(shift['earned'] for shift in filtered_shifts)
-    total_hours = sum(shift['hours'] for shift in filtered_shifts)
-    total_shifts = len(filtered_shifts)
-
-    if total_shifts > 0:
-        average_hours = total_hours / total_shifts
-        average_earned = total_earned / total_shifts
-    else:
-        average_hours = 0
-        average_earned = 0
-
-    data = {
-        "period_start": str(period_start),
-        "period_end": str(period_end),
-        "total_shifts": total_shifts,
-        "total_hours": total_hours,
-        "total_earned": total_earned,
-        "average_hours": average_hours,
-        "average_earned": average_earned,
-        "notes": notes,
-    }
-    return data
-
 def generate_ai_reflection(data):
     if not data["notes"]:
         return "No notes available for reflection in the current period."
