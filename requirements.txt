@@ -4,3 +4,7 @@ pydantic
 python-dotenv
 psycopg[binary]
 requests
+passlib
+python-jose
+bcrypt
+python-multipart
