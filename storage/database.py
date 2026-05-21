@@ -16,7 +16,7 @@ if not DATABASE_URL:
 def get_connection():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
-
+#test
 def init_db():
     with get_connection() as conn:
         with conn.cursor() as cursor:
@@ -67,48 +67,51 @@ def init_db():
                 """, (1, 17, 8, 20))
 
 
-def get_all_shifts():
+def get_all_shifts(user_id):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT * FROM shifts
+                SELECT * FROM shifts 
+                WHERE user_id = %s
                 ORDER BY id
-            """)
+            """, (user_id,))
             rows = cursor.fetchall()
             return rows
 
 
-def add_shift_to_db(date, hours, earned, note):
+def add_shift_to_db(date, hours, earned, note, user_id):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO shifts (date, hours, earned, note)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO shifts (date, hours, earned, note, user_id)
+                VALUES (%s, %s, %s, %s, %s)
                 RETURNING *
-            """, (date, hours, earned, note))
+            """, (date, hours, earned, note, user_id))
             row = cursor.fetchone()
             return row
 
 
-def delete_shift_from_db(shift_id):
+def delete_shift_from_db(shift_id, user_id):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
                 DELETE FROM shifts
                 WHERE id = %s
-            """, (shift_id,))
+                AND user_id = %s
+            """, (shift_id, user_id))
             return cursor.rowcount > 0
 
 
-def update_shift_in_db(shift_id, date, hours, earned, note):
+def update_shift_in_db(shift_id, date, hours, earned, note, user_id):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
                 UPDATE shifts
                 SET date = %s, hours = %s, earned = %s, note = %s
                 WHERE id = %s
+                AND user_id = %s
                 RETURNING *
-            """, (date, hours, earned, note, shift_id))
+            """, (date, hours, earned, note, shift_id, user_id))
             row = cursor.fetchone()
             return row
 

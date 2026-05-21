@@ -12,12 +12,12 @@ def get_settings():
     return get_settings_from_db()
 
 
-def get_shifts():
-    return get_all_shifts()
+def get_shifts(user_id: int = Depends(get_current_user)):
+    return get_all_shifts(user_id)
 
 
 @router.get('/shifts')
-def list_shifts(shifts: list = Depends(get_shifts), user_id: int = Depends(get_current_user)):
+def list_shifts(shifts: list = Depends(get_shifts)):
     return shifts
 
 
@@ -25,18 +25,18 @@ def list_shifts(shifts: list = Depends(get_shifts), user_id: int = Depends(get_c
 def post_shifts(shifts: ShiftCreate, settings: dict = Depends(get_settings), user_id: int = Depends(get_current_user)):
     rate = settings["hour_rate"]
     earned = SummaryService.calculate_earned(shifts.hours, rate)
-    new_shifts = add_shift_to_db(shifts.date, shifts.hours, earned, shifts.note)
+    new_shifts = add_shift_to_db(shifts.date, shifts.hours, earned, shifts.note, user_id)
     return new_shifts
 
 @router.get('/summary')
 def get_summary(shifts: list = Depends(get_shifts),
-                                  settings: dict = Depends(get_settings), user_id: int = Depends(get_current_user)):
+                                  settings: dict = Depends(get_settings)):
     services = SummaryService(shifts=shifts, period_start_day=settings['salary_period_start_day'])
     return services.get_summary()
 
 @router.get('/summary/ai')
 def get_ai_summary(shifts: list = Depends(get_shifts),
-                                  settings: dict = Depends(get_settings), user_id: int = Depends(get_current_user)):
+                                  settings: dict = Depends(get_settings)):
     services = SummaryService(shifts=shifts, period_start_day=settings['salary_period_start_day'])
 
     summary = services.get_summary()
@@ -50,7 +50,7 @@ def get_ai_summary(shifts: list = Depends(get_shifts),
 
 @router.delete('/shifts/{shift_id}')
 def delete_shift(shift_id : int, user_id: int = Depends(get_current_user)):
-    result = delete_shift_from_db(shift_id)
+    result = delete_shift_from_db(shift_id, user_id)
     if not result:
         raise HTTPException(status_code=404, detail="Shift not found")
 
@@ -68,6 +68,7 @@ def update_shift(shift_id : int, shift : ShiftCreate, settings: dict = Depends(g
         shift.hours,
         earned,
         shift.note,
+        user_id,
     )
     if not result:
         raise HTTPException(status_code=404, detail="Shift not found")
@@ -75,7 +76,7 @@ def update_shift(shift_id : int, shift : ShiftCreate, settings: dict = Depends(g
 
 @router.get('/reflection/current-period')
 def get_current_period_reflection(shifts: list = Depends(get_shifts),
-                                  settings: dict = Depends(get_settings), user_id: int = Depends(get_current_user)):
+                                  settings: dict = Depends(get_settings)):
 
 
     service = ReflectionService(shifts=shifts, period_start_day=settings["salary_period_start_day"])
