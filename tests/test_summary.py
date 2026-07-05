@@ -9,7 +9,7 @@ from storage.database import delete_user, get_user_by_username
 client = TestClient(app)
 def get_testdata():
     data = {
-        'username': 'user95',
+        'username': 'user94',
         'password': 'pass1',
     }
     return data
