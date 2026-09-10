@@ -2,8 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from main import app
 from services.classes import SummaryService
-from storage.database import delete_user, get_user_by_username
-
+from storage.orm_base import delete_user, get_user_by_username
 
 
 client = TestClient(app)

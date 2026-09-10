@@ -7,10 +7,13 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL must be set in .env file.")
+sqlalchemy_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
-engine = create_engine(DATABASE_URL)
+
+engine = create_engine(sqlalchemy_url)
 
 
 class Base(DeclarativeBase):
@@ -34,5 +37,14 @@ class Shift(Base):
     note: Mapped[str | None]
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="shifts")
+
+class Settings(Base):
+    __tablename__ = "settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hour_rate: Mapped[float]
+    default_shift_normal_hours: Mapped[int]
+    salary_period_start_day: Mapped[int]
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 

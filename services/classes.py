@@ -24,19 +24,19 @@ class SummaryService:
     def calculate_earned(hours: float, rate: float) -> float:
         return hours * rate
 
-    def _get_filtered_shifts(self) -> list[dict]:
+    def _get_filtered_shifts(self) -> list[Shift]:
         filtered_shifts = []
 
         for shift in self.shifts:
-            shift_date = date.fromisoformat(shift['date'])
+            shift_date = date.fromisoformat(shift.date)
             if self.period_start <= shift_date <= self.period_end:
                 filtered_shifts.append(shift)
         return filtered_shifts
 
     def get_summary(self) -> dict:
         filtered_shifts = self._get_filtered_shifts()
-        total_earned = sum(shift['earned'] for shift in filtered_shifts)
-        total_hours = sum(shift['hours'] for shift in filtered_shifts)
+        total_earned = sum(shift.earned for shift in filtered_shifts)
+        total_hours = sum(shift.hours for shift in filtered_shifts)
         total_shifts = len(filtered_shifts)
         if total_earned > 0:
             average_earned = total_earned / total_shifts

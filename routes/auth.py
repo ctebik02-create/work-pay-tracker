@@ -4,9 +4,8 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from requests import Session
 
-from storage.database import create_user, get_user_by_username
+from storage.orm_base import create_user, get_user_by_username
 import os
 
 load_dotenv()
@@ -39,9 +38,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 def register_user(username: str = Form(), password: str = Form()):
     if get_user_by_username(username):
         raise HTTPException(status_code=400, detail="Username already exists")
-    hash = pwd_context.hash(password)
-    user = create_user(username, hash)
-    return {'access_token': create_token(user['id'])}
+    password_hash = pwd_context.hash(password)
+    user = create_user(username, password_hash)
+    return {'access_token': create_token(user.id)}
 
 @router.post("/auth/login")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -49,6 +48,6 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
 
     if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    if not pwd_context.verify(form_data.password, user['password']):
+    if not pwd_context.verify(form_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    return {'access_token': create_token(user['id'])}
+    return {'access_token': create_token(user.id)}

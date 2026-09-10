@@ -1,8 +1,6 @@
 import os
 import requests
-from storage.database import get_all_shifts, get_settings_from_db
-from services.periods import get_current_period_start, get_current_period_end
-from datetime import date
+
 
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
 
