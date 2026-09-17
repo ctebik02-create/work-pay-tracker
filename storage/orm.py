@@ -45,6 +45,6 @@ class Settings(Base):
     hour_rate: Mapped[float]
     default_shift_normal_hours: Mapped[int]
     salary_period_start_day: Mapped[int]
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
 
 
