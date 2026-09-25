@@ -14,7 +14,7 @@ class ShiftCreate(BaseModel):
 class ShiftResponse(BaseModel):
     model_config = ConfigDict(from_attributes = True)
     id: int
-    date: str
+    date: date
     hours: float
     earned: float
     note: str | None = None
