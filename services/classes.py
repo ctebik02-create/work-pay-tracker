@@ -28,7 +28,7 @@ class SummaryService:
         filtered_shifts = []
 
         for shift in self.shifts:
-            shift_date = date.fromisoformat(shift.date)
+            shift_date = shift.date
             if self.period_start <= shift_date <= self.period_end:
                 filtered_shifts.append(shift)
         return filtered_shifts
@@ -65,9 +65,9 @@ class ReflectionService(SummaryService):
         data = self.get_summary()
         notes = []
         for shift in self._get_filtered_shifts():
-            note = shift['note']
+            note = shift.note
             if note is not None and note.strip() != '':
-                notes.append({'date': shift['date'], 'note': note})
+                notes.append({'date': shift.date, 'note': note})
         data.update({
             'notes': notes,
             'currency': self.currency,
